@@ -1,84 +1,108 @@
-const cellElements = document.querySelectorAll(".game-board .cell");
-const player1 = document.querySelector(".players .player1");
-const player2 = document.querySelector(".players .player2");
-const result = document.querySelector(".result");
-const result_text = document.querySelector(".result h1");
-const restart_btn = document.querySelector(".result button");
+let btnRef = document.querySelectorAll(".button-option");
+let popupRef = document.querySelector(".popup");
+let newgameBtn = document.getElementById("new-game");
+let restartBtn = document.getElementById("restart");
+let msgRef = document.getElementById("message");
+//Winning Pattern Array
+let winningPattern = [
+  [0, 1, 2],
+  [0, 3, 6],
+  [2, 5, 8],
+  [6, 7, 8],
+  [3, 4, 5],
+  [1, 4, 7],
+  [0, 4, 8],
+  [2, 4, 6],
+];
+//Player 'X' plays first
+let xTurn = true;
+let count = 0;
 
-//winning conditions
-const WINNING_CONDITIONS = [
-   [0, 1, 2],
-   [3, 4, 5],
-   [6, 7, 8],
-   [0, 3, 6],
-   [1, 4, 7],
-   [2, 5, 8],
-   [0, 4, 8],
-   [2, 4, 6],
-]
+//Disable All Buttons
+const disableButtons = () => {
+  btnRef.forEach((element) => (element.disabled = true));
+  //enable popup
+  popupRef.classList.remove("hide");
+};
 
-const playerO = "O";
-const playerX = "X";
-let toggleTurn = true;
-cellElements.forEach(cell => {
-   cell.onclick = () => {
-      let currentPlayer = toggleTurn ? playerO : playerX;
-      cell.classList.add("disabled");
-      addInCell(cell, currentPlayer);
+//Enable all buttons (For New Game and Restart)
+const enableButtons = () => {
+  btnRef.forEach((element) => {
+    element.innerText = "";
+    element.disabled = false;
+  });
+  //disable popup
+  popupRef.classList.add("hide");
+};
 
-      if (winnerCheck(currentPlayer)) {
+//This function is executed when a player wins
+const winFunction = (letter) => {
+  disableButtons();
+  if (letter == "X") {
+    msgRef.innerHTML = "&#x1F389; <br> 'X' Wins";
+  } else {
+    msgRef.innerHTML = "&#x1F389; <br> 'O' Wins";
+  }
+};
 
-         addInactive();
-         result_text.innerText = currentPlayer + " Win the Game";
+//Function for draw
+const drawFunction = () => {
+  disableButtons();
+  msgRef.innerHTML = "&#x1F60E; <br> It's a Draw";
+};
 
-      } else if (isDraw()) {
-         // Draw the Game!
-         addInactive();
-         result_text.innerText = "Draw the Game!";
-      } else {
-         swapPlayer();
-      }
-   }
+//New Game
+newgameBtn.addEventListener("click", () => {
+  count = 0;
+  enableButtons();
+});
+restartBtn.addEventListener("click", () => {
+  count = 0;
+  enableButtons();
 });
 
-//Winner Check Function
-function winnerCheck(currentPlayer) {
-   return WINNING_CONDITIONS.some(conditon => {
-      return conditon.every(index => {
-         return cellElements[index].classList.contains(currentPlayer);
-      });
-   })
-}
+//Win Logic
+const winChecker = () => {
+  //Loop through all win patterns
+  for (let i of winningPattern) {
+    let [element1, element2, element3] = [
+      btnRef[i[0]].innerText,
+      btnRef[i[1]].innerText,
+      btnRef[i[2]].innerText,
+    ];
+    //Check if elements are filled
+    //If 3 empty elements are same and would give win as would
+    if (element1 != "" && (element2 != "") & (element3 != "")) {
+      if (element1 == element2 && element2 == element3) {
+        //If all 3 buttons have same values then pass the value to winFunction
+        winFunction(element1);
+      }
+    }
+  }
+};
 
-//Game Draw condition checking function
-function isDraw() {
-   return [...cellElements].every(cell => {
-      return cell.classList.contains(playerX) || cell.classList.contains(playerO);
-   })
-}
-
-//Player Swap Turn by Turn function
-function swapPlayer() {
-   toggleTurn = !toggleTurn;
-   if (toggleTurn) {
-      player1.classList.add("active");
-      player2.classList.remove("active");
-   } else {
-      player2.classList.add("active");
-      player1.classList.remove("active");
-   }
-}
-
-function addInCell(cell, currentPlayer) {
-   cell.innerHTML = currentPlayer;
-   cell.classList.add(currentPlayer);
-}
-
-function addInactive() {
-   result.classList.remove("inactive");
-}
-
-//restart function
-restart_btn.onclick = () => {
-   location.reload();
-}
+//Display X/O on click
+btnRef.forEach((element) => {
+  element.addEventListener("click", () => {
+    if (xTurn) {
+      xTurn = false;
+      //Display X
+      element.innerText = "X";
+      element.disabled = true;
+    } else {
+      xTurn = true;
+      //Display Y
+      element.innerText = "O";
+      element.disabled = true;
+    }
+    //Increment count on each click
+    count += 1;
+    if (count == 9) {
+      drawFunction();
+    }
+    //Check for win on every click
+    winChecker();
+  });
+});
+//Enable Buttons and disable popup on page load
+window.onload = enableButtons;
